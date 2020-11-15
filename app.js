@@ -4,7 +4,9 @@ var uiController = (function() {
         inputType: ".add__type",
         inputDescription: ".add__description",
         inputValue: ".add__value",
-        addBtn: ".add__btn"
+        addBtn: ".add__btn",
+        incomeList: ".income__list",
+        expenseList: ".expenses__list",
     };
 
     return {
@@ -19,15 +21,26 @@ var uiController = (function() {
         getDOMstrings: () => {
             return DOMstrings;
         },
-        addListItem: function(item, type) {
+        clearFields: () => {
+            var fields = document.querySelectorAll(DOMstrings.inputDescription + "," +
+                DOMstrings.inputValue);
+            var fieldsArr = Array.prototype.slice.call(fields);
+            fieldsArr.map((val, index) => {
+                val.value = '';
+                if (index == 0)
+                    val.focus();
+            });
+        },
+
+        addListItem: (item, type) => {
             var html, list;
             if (type === 'inc') {
                 html = ' <div class="item clearfix" id="income-%id%"><div class="item__description">$$DESCRIPTION$$</div><div class="right clearfix"><div class="item__value">$$VALUE$$</div><div class="item__delete">  <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>  </div></div></div>';
-                list = '.income__list';
+                list = DOMstrings.incomeList;
                 console.log("inc baina");
             } else {
                 html = '<div class="item clearfix" id="expense-%id%"><div class="item__description">$$DESCRIPTION$$</div><div class="right clearfix"><div class="item__value">$$VALUE$$</div><div class="item__percentage">21%</div>        <div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
-                list = '.expenses__list';
+                list = DOMstrings.expenseList;
                 console.log("exp baina");
             }
             html = html.replace('%id%', item.id);
@@ -40,8 +53,8 @@ var uiController = (function() {
 })();
 
 // Санхүүтэй ажиллах контроллер
-var financeController = (function() {
-    var Income = function(id, description, value) {
+var financeController = (() => {
+    var Income = (id, description, value) {
         this.id = id;
         this.description = description;
         this.value = value;
@@ -62,7 +75,7 @@ var financeController = (function() {
         }
     }
     return {
-        addItem: function(type, desc, val) {
+        addItem: (type, desc, val) => {
             var item, id;
             if (data.items[type].length === 0) {
                 id = 1;
@@ -88,7 +101,7 @@ var financeController = (function() {
 var appController = (function(uiController, financeController) {
 
 
-    var ctrlAddItem = function() {
+    var ctrlAddItem = () => {
         // 1. Оруулах өгөгдлийг дэлгэцээс олж авна.
         var input = uiController.getInput();
         console.log(input.type);
@@ -99,10 +112,11 @@ var appController = (function(uiController, financeController) {
 
         // 3. Олж авсан өгөгдлүүдээ вэб дээрээ тохирох хэсэгт нь гаргана
         uiController.addListItem(item, input.type);
+        uiController.clearFields();
         // 4. Төсвийг тооцоолно
         // 5. Эцсийн үлдэгдэл, тооцоог дэлгэцэнд гаргана.
     };
-    var setupEventLisreners = function() {
+    var setupEventLisreners = () => {
         var DOM = uiController.getDOMstrings();
         document.querySelector(DOM.addBtn).addEventListener("click", function() {
             ctrlAddItem();
@@ -115,7 +129,7 @@ var appController = (function(uiController, financeController) {
         });
     }
     return {
-        init: function() {
+        init: () => {
             setupEventLisreners();
         }
     }
