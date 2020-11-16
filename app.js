@@ -10,7 +10,8 @@ var uiController = (function() {
         tusuvLabel: ".budget__value",
         incomeLabel: ".budget__income--value",
         expesesLabel: ".budget__expenses--value",
-        percentageLabel: ".budget__expenses--percentage"
+        percentageLabel: ".budget__expenses--percentage",
+        containerDiv: ".container",
     };
 
     return {
@@ -46,14 +47,18 @@ var uiController = (function() {
             else document.querySelector(DOMstrings.percentageLabel).textContent = tusuv.huvi + "%";
 
         },
+        deleteListItem: (id) => {
+            var el = document.getElementById(id);
+            el.parentNode.removeChild(el);
+        },
         addListItem: (item, type) => {
             var html, list;
             if (type === 'inc') {
-                html = ' <div class="item clearfix" id="income-%id%"><div class="item__description">$$DESCRIPTION$$</div><div class="right clearfix"><div class="item__value">$$VALUE$$</div><div class="item__delete">  <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>  </div></div></div>';
+                html = ' <div class="item clearfix" id="inc-%id%"><div class="item__description">$$DESCRIPTION$$</div><div class="right clearfix"><div class="item__value">$$VALUE$$</div><div class="item__delete">  <button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button>  </div></div></div>';
                 list = DOMstrings.incomeList;
                 console.log("inc baina");
             } else {
-                html = '<div class="item clearfix" id="expense-%id%"><div class="item__description">$$DESCRIPTION$$</div><div class="right clearfix"><div class="item__value">$$VALUE$$</div><div class="item__percentage">21%</div>        <div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
+                html = '<div class="item clearfix" id="exp-%id%"><div class="item__description">$$DESCRIPTION$$</div><div class="right clearfix"><div class="item__value">$$VALUE$$</div><div class="item__percentage">21%</div>        <div class="item__delete"><button class="item__delete--btn"><i class="ion-ios-close-outline"></i></button></div></div></div>';
                 list = DOMstrings.expenseList;
                 console.log("exp baina");
             }
@@ -112,6 +117,12 @@ var financeController = (() => {
                 totalExp: data.totals.exp
             }
         },
+        deleteItem: (type, id) => {
+            var ids = data.items[type].map((i) => i.id);
+            var index = ids.indexOf(id);
+            if (index !== -1)
+                data.items[type].splice(index, 1);
+        },
         addItem: (type, desc, val) => {
             var item, id;
             if (data.items[type].length === 0) {
@@ -169,6 +180,15 @@ var appController = (function(uiController, financeController) {
                 ctrlAddItem();
             }
         });
+        document.querySelector(DOM.containerDiv).addEventListener("click", (event) => {
+            var id = event.target.parentNode.parentNode.parentNode.parentNode.id;
+            if (id) {
+                var type = id.split("-")[0];
+                var itemid = parseInt(id.split("-")[1]);
+            }
+            financeController.deleteItem(type, itemid);
+            uiController.deleteListItem(id);
+        })
     }
     return {
         init: () => {
