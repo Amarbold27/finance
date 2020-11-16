@@ -7,6 +7,10 @@ var uiController = (function() {
         addBtn: ".add__btn",
         incomeList: ".income__list",
         expenseList: ".expenses__list",
+        tusuvLabel: ".budget__value",
+        incomeLabel: ".budget__income--value",
+        expesesLabel: ".budget__expenses--value",
+        percentageLabel: ".budget__expenses--percentage"
     };
 
     return {
@@ -14,7 +18,7 @@ var uiController = (function() {
             return {
                 type: document.querySelector(DOMstrings.inputType).value,
                 description: document.querySelector(DOMstrings.inputDescription).value,
-                value: document.querySelector(DOMstrings.inputValue).value
+                value: parseInt(document.querySelector(DOMstrings.inputValue).value)
             };
         },
 
@@ -31,7 +35,17 @@ var uiController = (function() {
                     val.focus();
             });
         },
+        tusviigUzuuleh: (tusuv) => {
+            document.querySelector(DOMstrings.tusuvLabel).textContent = tusuv.tusuv;
+            document.querySelector(DOMstrings.incomeLabel).textContent = tusuv.totalInc;
+            if (tusuv.totalExp === 0)
+                document.querySelector(DOMstrings.expesesLabel).textContent = tusuv.totalExp;
+            else document.querySelector(DOMstrings.expesesLabel).textContent = "-" + tusuv.totalExp;
+            if (tusuv.huvi === 0)
+                document.querySelector(DOMstrings.percentageLabel).textContent = tusuv.huvi;
+            else document.querySelector(DOMstrings.percentageLabel).textContent = tusuv.huvi + "%";
 
+        },
         addListItem: (item, type) => {
             var html, list;
             if (type === 'inc') {
@@ -54,7 +68,7 @@ var uiController = (function() {
 
 // Санхүүтэй ажиллах контроллер
 var financeController = (() => {
-    var Income = (id, description, value) {
+    var Income = function(id, description, value) {
         this.id = id;
         this.description = description;
         this.value = value;
@@ -64,6 +78,13 @@ var financeController = (() => {
         this.description = description;
         this.value = value;
     }
+    var calculateTotal = (type) => {
+        var sum = 0;
+        data.items[type].forEach(element => {
+            sum = sum + element.value;
+        });
+        data.totals[type] = sum;
+    }
     var data = {
         items: {
             inc: [],
@@ -72,9 +93,25 @@ var financeController = (() => {
         totals: {
             inc: 0,
             exp: 0
-        }
+        },
+        tusuv: 0,
+        huvi: 0,
     }
     return {
+        tusuvToostooloh: () => {
+            calculateTotal("inc");
+            calculateTotal("exp");
+            data.tusuv = data.totals.inc - data.totals.exp;
+            data.huvi = Math.round((data.totals.exp / data.totals.inc) * 100);
+        },
+        tusviigAvah: () => {
+            return {
+                tusuv: data.tusuv,
+                huvi: data.huvi,
+                totalInc: data.totals.inc,
+                totalExp: data.totals.exp
+            }
+        },
         addItem: (type, desc, val) => {
             var item, id;
             if (data.items[type].length === 0) {
@@ -105,13 +142,18 @@ var appController = (function(uiController, financeController) {
         // 1. Оруулах өгөгдлийг дэлгэцээс олж авна.
         var input = uiController.getInput();
         console.log(input.type);
+        if (input.description !== "" && Number.isNaN(input.value) !== true) {
+            // 2. Олж авсан өгөгдлүүдээ санхүүгийн контроллерт дамжуулж тэнд хадгална.
+            var item = financeController.addItem(input.type, input.description, input.value);
+            console.log(financeController.data());
 
-        // 2. Олж авсан өгөгдлүүдээ санхүүгийн контроллерт дамжуулж тэнд хадгална.
-        var item = financeController.addItem(input.type, input.description, input.value);
-        console.log(financeController.data());
-
-        // 3. Олж авсан өгөгдлүүдээ вэб дээрээ тохирох хэсэгт нь гаргана
-        uiController.addListItem(item, input.type);
+            // 3. Олж авсан өгөгдлүүдээ вэб дээрээ тохирох хэсэгт нь гаргана
+            uiController.addListItem(item, input.type);
+            financeController.tusuvToostooloh();
+            //console.log(financeController.tusuvToostooloh());
+            var tusuv = financeController.tusviigAvah();
+            uiController.tusviigUzuuleh(tusuv);
+        }
         uiController.clearFields();
         // 4. Төсвийг тооцоолно
         // 5. Эцсийн үлдэгдэл, тооцоог дэлгэцэнд гаргана.
@@ -131,6 +173,12 @@ var appController = (function(uiController, financeController) {
     return {
         init: () => {
             setupEventLisreners();
+            uiController.tusviigUzuuleh({
+                tusuv: 0,
+                huvi: 0,
+                totalInc: 0,
+                totalExp: 0
+            })
         }
     }
 })(uiController, financeController);
